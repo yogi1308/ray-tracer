@@ -9,6 +9,7 @@ int main(void) {
     printf("\n255\n");
 
     for (int y = 0; y < image_height; y++) {
+        fprintf(stderr, "\rScanlines remaining: %d\n", image_height - y);
         for (int x = 0; x < image_width; x++) {
             double r = (double)x / (image_width - 1);
             double g = (double)y / (image_height - 1);
@@ -21,4 +22,5 @@ int main(void) {
             printf("%d %d %d\n", ir, ig, ib);
         }
     }
+    fprintf(stderr, "\rDone. \n");
 }
