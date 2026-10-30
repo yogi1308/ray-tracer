@@ -1,0 +1,4 @@
+/main
+/image.ppm
+.*
+!.gitignore
