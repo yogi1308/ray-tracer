@@ -1,5 +1,3 @@
-// Minimal 3D vector math for the ray tracer.
-
 #ifndef VEC3_H
 #define VEC3_H
 
@@ -11,7 +9,6 @@ typedef struct vec3 {
 } vec3;
 
 typedef vec3 point3;
-typedef vec3 color;
 
 static inline vec3 vec3_new(double x, double y, double z) {
     vec3 v = {{x, y, z}};

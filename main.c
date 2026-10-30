@@ -1,5 +1,8 @@
 #include <stdio.h>
 
+#include "color.h"
+#include "vec3.h"
+
 int main(void) {
     int image_width = 256;
     int image_height = 256;
@@ -20,6 +23,9 @@ int main(void) {
             int ib = (int)(255.999 * b);
 
             printf("%d %d %d\n", ir, ig, ib);
+            vec3 pixel_color =
+                vec3_new((double)x / (image_width - 1), (double)y / (image_height - 1), 0.0);
+            write_color(stdout, pixel_color);
         }
     }
     fprintf(stderr, "\rDone. \n");
