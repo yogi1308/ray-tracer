@@ -2,3 +2,4 @@
 /image.ppm
 .*
 !.gitignore
+!.clang-format
