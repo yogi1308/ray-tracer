@@ -3,3 +3,4 @@
 .*
 !.gitignore
 !.clang-format
+!.nvim.lua
