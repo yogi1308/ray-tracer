@@ -6,7 +6,7 @@ IndentWidth: 4
 IndentCaseLabels: true
 
 # Wrap lines at 100 columns.
-ColumnLimit: 100
+ColumnLimit: 120
 
 # When a call or declaration wraps, put one argument/parameter per line and
 # indent by ContinuationIndentWidth rather than aligning to the open paren.
