@@ -29,16 +29,14 @@ static inline double hit_sphere(vec3 center, double radius, ray r) {
     // vector from ray origin to sphere center
     vec3 oc = vec3_sub(center, ray_origin(r));
     // refer to NOTES.md to see how a,b,c were derived
-    double a = dot(ray_direction(r), ray_direction(r));
-    double b = -2.0 * dot(ray_direction(r), oc);
-    double c = dot(oc, oc) - radius * radius;
-
-    // Discriminant b^2 - 4ac: < 0 means no hit, 0 means touches once, > 0 means passes through twice.
-    double discriminant = b * b - 4 * a * c;
+    double a = vec3_length_squared(ray_direction(r));
+    double h = dot(ray_direction(r), oc);
+    double c = vec3_length_squared(oc) - radius * radius;
+    double discriminant = h * h - a * c;
     if (discriminant < 0) {
         return -1.0;
     } else {
-        return (-b - sqrt(discriminant)) / (2.0 * a);
+        return (h - sqrt(discriminant)) / a;
     }
 }
 
@@ -46,7 +44,7 @@ static inline color ray_color(ray r) {
     // hit_sphere returns where on the ray the sphere was hit
     double t = hit_sphere(vec3_new(0, 0, -1), 0.5, r);
     if (t > 0.0) {
-        vec3 normal = vec3_sub(unit_vector(ray_at(r, t)), vec3_new(0, 0, -1));
+        vec3 normal = unit_vector(vec3_sub(ray_at(r, t), vec3_new(0, 0, -1)));
         return vec3_scale(0.5, vec3_new(vec3_x(normal) + 1, vec3_y(normal) + 1, vec3_z(normal) + 1));
     }
     // Normalize the direction, then use its height to blend white and blue, which gives the sky gradient.
