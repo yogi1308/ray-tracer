@@ -1,4 +1,5 @@
 /main
+utilities/ray
 /image.ppm
 .*
 !.gitignore

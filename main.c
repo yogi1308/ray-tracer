@@ -1,10 +1,22 @@
-#include <stdio.h>
+#include "utilities/rt_weekend.h"
 
-#include "utilities/color.h"
-#include "utilities/ray.h"
-#include "utilities/vec3.h"
+#include "utilities/hittable_list.h"
+#include "utilities/sphere.h"
+
+static inline color ray_color(ray r, const hittable_list *world) {
+    hit_record rec;
+    if (hittable_list_hit(world, r, 0, infinity, &rec)) {
+        return vec3_scale(0.5, vec3_add(rec.normal, vec3_new(1, 1, 1)));
+    }
+    vec3 unit_direction = unit_vector(ray_direction(r));
+    double a = 0.5 * (vec3_y(unit_direction) + 1.0);
+    return vec3_add(vec3_scale((1.0 - a), color_new(1.0, 1.0, 1.0)), vec3_scale(a, color_new(0.5, 0.7, 1.0)));
+}
 
 int main(void) {
+    hittable_list world = {0};
+    hittable_list_add(&world, hittable_from_sphere(sphere_new(vec3_new(0, 0, -1), 0.5)));
+    hittable_list_add(&world, hittable_from_sphere(sphere_new(vec3_new(0, -100.5, -1), 100)));
     double aspect_ratio = 16.0 / 9.0;
     int image_width = 800;
 
@@ -27,14 +39,14 @@ int main(void) {
     vec3 pixel_delta_x = vec3_div(viewport_x, image_width);
     vec3 pixel_delta_y = vec3_div(viewport_y, image_height);
 
-    // Start at the camera, move forward to the viewport plane, then half a width left and half a height up, which lands on the top-left corner.
-    // upper_left = camera_center − (0, 0, focal_length) − viewport_x/2 − viewport_y/2
+    // Start at the camera, move forward to the viewport plane, then half a width left and half a height up, which lands
+    // on the top-left corner. upper_left = camera_center − (0, 0, focal_length) − viewport_x/2 − viewport_y/2
     point3 viewport_upper_left =
         vec3_sub(vec3_sub(vec3_sub(camera_center, vec3_new(0, 0, focal_length)), vec3_div(viewport_x, 2)),
             vec3_div(viewport_y, 2));
 
-    // Move from that corner half a pixel right and half a pixel down, so the ray goes through the middle of pixel (0,0).
-    // pixel00 = upper_left + 0.5 × (pixel_delta_x + pixel_delta_y)
+    // Move from that corner half a pixel right and half a pixel down, so the ray goes through the middle of pixel
+    // (0,0). pixel00 = upper_left + 0.5 × (pixel_delta_x + pixel_delta_y)
     point3 pixel_00_loc = vec3_add(viewport_upper_left, vec3_scale(0.5, vec3_add(pixel_delta_x, pixel_delta_y)));
 
     printf("P3\n");
@@ -51,7 +63,7 @@ int main(void) {
 
             vec3 ray_direction = vec3_sub(pixel_center, camera_center);
             ray r = ray_new(camera_center, ray_direction);
-            color pixel_color = ray_color(r);
+            color pixel_color = ray_color(r, &world);
             write_color(stdout, pixel_color);
         }
     }

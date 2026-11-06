@@ -55,3 +55,16 @@ vim.keymap.set("n", "<leader>ct", function()
 	run_in_bottom_terminal("make run")
 end, { desc = "Build and run with Makefile" })
 
+vim.keymap.set("n", "<leader>cd", function()
+	vim.notify("make debug: building...")
+	vim.system({ "make", "debug" }, { text = true, cwd = vim.fn.getcwd() }, function(res)
+		vim.schedule(function()
+			if res.code == 0 then
+				vim.notify("make debug: success")
+			else
+				local out = (res.stderr ~= "" and res.stderr) or res.stdout
+				vim.notify("make debug failed:\n" .. out, vim.log.levels.ERROR)
+			end
+		end)
+	end)
+end, { desc = "Build debug with Makefile (background)" })
