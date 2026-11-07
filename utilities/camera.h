@@ -1,8 +1,10 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include "color.h"
 #include "hittable_list.h"
 #include "interval.h"
+#include "ray.h"
 #include "rt_weekend.h"
 #include "vec3.h"
 typedef struct camera {
@@ -13,13 +15,28 @@ typedef struct camera {
     point3 pixel_00_loc;
     vec3 pixel_delta_x;
     vec3 pixel_delta_y;
+    int samples_per_pixel;
+    double pixel_samples_scale;
 } camera;
 
 static inline camera camera_new(void) {
     camera cam = {0};
-    cam.aspect_ratio = 16.0/9.0;
+    cam.aspect_ratio = 16.0 / 9.0;
     cam.image_width = 800;
+    cam.samples_per_pixel = 10;
+    cam.pixel_samples_scale = 1.0 / cam.samples_per_pixel;
     return cam;
+}
+
+static inline vec3 sample_square(void) { return vec3_new(random_double() - 0.5, random_double() - 0.5, 0); }
+
+static inline ray camera_get_ray(const camera *cam, int x, int y) {
+    vec3 offset = sample_square();
+    point3 pixel_sample = vec3_add(cam->pixel_00_loc,
+        vec3_add(vec3_scale(x + vec3_x(offset), cam->pixel_delta_x),
+            vec3_scale(y + vec3_y(offset), cam->pixel_delta_y)));
+    point3 origin = cam->camera_center;
+    return ray_new(origin, vec3_sub(pixel_sample, origin));
 }
 
 static inline void camera_initialize(camera *cam) {
@@ -49,7 +66,8 @@ static inline void camera_initialize(camera *cam) {
 
     // Move from that corner half a pixel right and half a pixel down, so the ray goes through the middle of pixel
     // (0,0). pixel00 = upper_left + 0.5 × (pixel_delta_x + pixel_delta_y)
-    cam->pixel_00_loc = vec3_add(viewport_upper_left, vec3_scale(0.5, vec3_add(cam->pixel_delta_x, cam->pixel_delta_y)));
+    cam->pixel_00_loc =
+        vec3_add(viewport_upper_left, vec3_scale(0.5, vec3_add(cam->pixel_delta_x, cam->pixel_delta_y)));
 }
 
 static inline color ray_color(ray r, const hittable_list *world) {
@@ -73,13 +91,12 @@ static inline void camera_render(camera *cam, const hittable_list *world) {
         for (int x = 0; x < cam->image_width; x++) {
             // From pixel (0,0), take x steps right and y steps down to reach the center of pixel (x, y)
             // pixel_center = pixel00 + x × pixel_delta_x + y × pixel_delta_y
-            point3 pixel_center =
-                vec3_add(cam->pixel_00_loc, vec3_add(vec3_scale(x, cam->pixel_delta_x), vec3_scale(y, cam->pixel_delta_y)));
-
-            vec3 ray_direction = vec3_sub(pixel_center, cam->camera_center);
-            ray r = ray_new(cam->camera_center, ray_direction);
-            color pixel_color = ray_color(r, world);
-            write_color(stdout, pixel_color);
+            color pixel_color = color_new(0, 0, 0);
+            for (int sample = 0; sample < cam->samples_per_pixel; sample++) {
+                ray r = camera_get_ray(cam, x, y);
+                vec3_add_assign(&pixel_color, ray_color(r, world));
+            }
+            write_color(stdout, vec3_scale(cam->pixel_samples_scale, pixel_color));
         }
     }
     fprintf(stderr, "\rDone. \n");
