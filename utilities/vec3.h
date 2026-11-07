@@ -1,6 +1,7 @@
 #ifndef VEC3_H
 #define VEC3_H
 
+#include "random.h"
 #include <math.h>
 #include <stdio.h>
 
@@ -14,6 +15,14 @@ typedef vec3 point3;
 static inline vec3 vec3_new(double x, double y, double z) {
     vec3 v = {{x, y, z}};
     return v;
+}
+
+static inline vec3 vec3_random() {
+    return vec3_new(random_double(), random_double(), random_double());
+}
+
+static inline vec3 vec3_random_range(double min, double max) {
+    return vec3_new(random_double_range(min, max), random_double_range(min, max), random_double_range(min, max));
 }
 
 static inline double vec3_x(vec3 v) { return v.e[0]; }
@@ -52,5 +61,24 @@ static inline vec3 cross(vec3 u, vec3 v) {
         u.e[0] * v.e[1] - u.e[1] * v.e[0]);
 }
 static inline vec3 unit_vector(vec3 v) { return vec3_div(v, vec3_length(v)); }
+
+static inline vec3 vec3_random_unit_vector() {
+    while (true) {
+        vec3 p = vec3_random_range(-1, 1);
+        double lensq = vec3_length_squared(p);
+        if (1e-160 < lensq && lensq <= 1) {
+            return vec3_div(p, sqrt(lensq));
+        }
+    }
+}
+
+static inline vec3 random_on_hemisphere(vec3 normal) {
+    vec3 on_unit_sphere = vec3_random_unit_vector();
+    if (dot(on_unit_sphere, normal) > 0.0) {
+        return on_unit_sphere;
+    } else {
+        return vec3_scale(-1, on_unit_sphere);
+    }
+}
 
 #endif

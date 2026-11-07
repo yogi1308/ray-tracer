@@ -4,6 +4,7 @@
 #include "color.h"
 #include "hittable_list.h"
 #include "interval.h"
+#include "random.h"
 #include "ray.h"
 #include "rt_weekend.h"
 #include "vec3.h"
@@ -17,6 +18,7 @@ typedef struct camera {
     vec3 pixel_delta_y;
     int samples_per_pixel;
     double pixel_samples_scale;
+    int max_depth;
 } camera;
 
 static inline camera camera_new(void) {
@@ -25,6 +27,7 @@ static inline camera camera_new(void) {
     cam.image_width = 800;
     cam.samples_per_pixel = 100;
     cam.pixel_samples_scale = 1.0 / cam.samples_per_pixel;
+    cam.max_depth = 50;
     return cam;
 }
 
@@ -70,10 +73,14 @@ static inline void camera_initialize(camera *cam) {
         vec3_add(viewport_upper_left, vec3_scale(0.5, vec3_add(cam->pixel_delta_x, cam->pixel_delta_y)));
 }
 
-static inline color ray_color(ray r, const hittable_list *world) {
+static inline color ray_color(ray r, int depth, const hittable_list *world) {
+    if (depth <= 0) {
+        return color_new(0, 0, 0);
+    }
     hit_record rec;
-    if (hittable_list_hit(world, r, interval_new(0, infinity), &rec)) {
-        return vec3_scale(0.5, vec3_add(rec.normal, vec3_new(1, 1, 1)));
+    if (hittable_list_hit(world, r, interval_new(0.001, infinity), &rec)) {
+        vec3 direction = random_on_hemisphere(rec.normal);
+        return vec3_scale(0.5, ray_color(ray_new(rec.p, direction), depth-1, world));
     }
     vec3 unit_direction = unit_vector(ray_direction(r));
     double a = 0.5 * (vec3_y(unit_direction) + 1.0);
@@ -94,7 +101,7 @@ static inline void camera_render(camera *cam, const hittable_list *world) {
             color pixel_color = color_new(0, 0, 0);
             for (int sample = 0; sample < cam->samples_per_pixel; sample++) {
                 ray r = camera_get_ray(cam, x, y);
-                vec3_add_assign(&pixel_color, ray_color(r, world));
+                vec3_add_assign(&pixel_color, ray_color(r, cam->max_depth, world));
             }
             write_color(stdout, vec3_scale(cam->pixel_samples_scale, pixel_color));
         }
