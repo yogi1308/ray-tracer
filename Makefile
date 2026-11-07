@@ -8,8 +8,8 @@ release: main.c utilities/color.c utilities/color.h utilities/ray.h utilities/ve
 	gcc -O3 main.c utilities/color.c -o main -lm
 
 run: main
-	./main > outputs/image5.ppm
-	xdg-open outputs/image5.ppm
+	./main > outputs/image6.ppm
+	xdg-open outputs/image6.ppm
 
 clean:
 	rm -f main
