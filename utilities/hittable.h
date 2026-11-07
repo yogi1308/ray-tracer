@@ -18,10 +18,10 @@ static inline hittable hittable_from_sphere(sphere s) {
     return h;
 }
 
-static inline bool hittable_hit(const hittable *obj, ray r, double t_min, double t_max, hit_record *rec) {
+static inline bool hittable_hit(const hittable *obj, ray r, interval interval, hit_record *rec) {
     switch (obj->type) {
         case HITTABLE_SPHERE:
-            return sphere_hit(obj->shape.sphere, r, t_min, t_max, rec);
+            return sphere_hit(obj->shape.sphere, r, interval, rec);
     }
     return false;
 }

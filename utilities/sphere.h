@@ -4,6 +4,7 @@
 #include <math.h>
 
 #include "hit_record.h"
+#include "interval.h"
 #include "ray.h"
 #include "vec3.h"
 
@@ -17,7 +18,7 @@ static inline sphere sphere_new(point3 center, double radius) {
     return s;
 }
 
-static inline bool sphere_hit(sphere s, ray r, double ray_tmin, double ray_tmax, hit_record *rec) {
+static inline bool sphere_hit(sphere s, ray r, interval interval, hit_record *rec) {
     vec3 oc = vec3_sub(s.center, ray_origin(r));
     double a = vec3_length_squared(ray_direction(r));
     double h = dot(ray_direction(r), oc);
@@ -28,9 +29,9 @@ static inline bool sphere_hit(sphere s, ray r, double ray_tmin, double ray_tmax,
     }
     double sqrtd = sqrt(discriminant);
     double root = (h - sqrtd) / a;
-    if (root <= ray_tmin || ray_tmax <= root) {
+    if (!surrounds(interval, root)) {
         root = (h + sqrtd) / a;
-        if (root <= ray_tmin || ray_tmax <= root)
+        if (!surrounds(interval, root))
             return false;
     }
 

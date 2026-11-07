@@ -1,3 +1,4 @@
+#include "utilities/interval.h"
 #include "utilities/rt_weekend.h"
 
 #include "utilities/hittable_list.h"
@@ -5,7 +6,7 @@
 
 static inline color ray_color(ray r, const hittable_list *world) {
     hit_record rec;
-    if (hittable_list_hit(world, r, 0, infinity, &rec)) {
+    if (hittable_list_hit(world, r, interval_new(0, infinity), &rec)) {
         return vec3_scale(0.5, vec3_add(rec.normal, vec3_new(1, 1, 1)));
     }
     vec3 unit_direction = unit_vector(ray_direction(r));

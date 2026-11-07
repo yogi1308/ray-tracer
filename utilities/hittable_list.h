@@ -3,6 +3,7 @@
 
 #include "hit_record.h"
 #include "hittable.h"
+#include "interval.h"
 #define MAX_HITTABLES 512
 
 typedef struct hittable_list {
@@ -19,12 +20,12 @@ static inline bool hittable_list_add(hittable_list *list, hittable obj) {
     return true;
 }
 
-static inline bool hittable_list_hit(const hittable_list *list, ray r, double t_min, double t_max, hit_record *rec) {
+static inline bool hittable_list_hit(const hittable_list *list, ray r, interval interval, hit_record *rec) {
     hit_record temp_rec;
     bool hit_anything = false;
-    double closest_so_far = t_max;
+    double closest_so_far = interval.max;
     for (int i = 0; i < list->count; i++) {
-        if (hittable_hit(&list->objects[i], r, t_min, closest_so_far, &temp_rec)) {
+        if (hittable_hit(&list->objects[i], r, interval_new(interval.min, closest_so_far), &temp_rec)) {
             hit_anything = true;
             closest_so_far = temp_rec.t;
             *rec = temp_rec;
