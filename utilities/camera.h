@@ -23,7 +23,7 @@ static inline camera camera_new(void) {
     camera cam = {0};
     cam.aspect_ratio = 16.0 / 9.0;
     cam.image_width = 800;
-    cam.samples_per_pixel = 10;
+    cam.samples_per_pixel = 100;
     cam.pixel_samples_scale = 1.0 / cam.samples_per_pixel;
     return cam;
 }
