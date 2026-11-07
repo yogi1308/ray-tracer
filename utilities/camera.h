@@ -2,6 +2,7 @@
 #define CAMERA_H
 
 #include "color.h"
+#include "hit_record.h"
 #include "hittable_list.h"
 #include "interval.h"
 #include "random.h"
@@ -79,7 +80,7 @@ static inline color ray_color(ray r, int depth, const hittable_list *world) {
     }
     hit_record rec;
     if (hittable_list_hit(world, r, interval_new(0.001, infinity), &rec)) {
-        vec3 direction = random_on_hemisphere(rec.normal);
+        vec3 direction = vec3_add(vec3_random_unit_vector(), rec.normal);
         return vec3_scale(0.5, ray_color(ray_new(rec.p, direction), depth-1, world));
     }
     vec3 unit_direction = unit_vector(ray_direction(r));

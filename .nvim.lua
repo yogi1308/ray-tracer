@@ -48,12 +48,39 @@ vim.keymap.set("n", "<leader>cr", function()
 end, { desc = "Run with Makefile" })
 
 vim.keymap.set("n", "<leader>cx", function()
-	run_in_bottom_terminal("make run")
-end, { desc = "Build and run with Makefile" })
+	local function tail(res)
+		local lines = {}
+		for line in ((res.stdout .. res.stderr):gsub("\r", "")):gmatch("[^\n]+") do
+			lines[#lines + 1] = line
+		end
+		return table.concat(lines, "\n", math.max(1, #lines - 7))
+	end
+
+	local function stage(cmd, running, ok, next_fn)
+		vim.notify(running)
+		vim.system(cmd, { text = true }, vim.schedule_wrap(function(res)
+			if res.code == 0 then
+				vim.notify(type(ok) == "function" and ok(res) or ok)
+				next_fn()
+			else
+				local out = tail(res)
+				vim.notify(running .. " failed:\n" .. (out ~= "" and out or "no output"), vim.log.levels.ERROR)
+			end
+		end))
+	end
+
+	stage({ "make", "clean" }, "Running make clean...", "Cleaned successfully", function()
+		stage({ "make" }, "Building...", "Build successful", function()
+			stage({ "make", "run" }, "Running...", function(res)
+				return "Run successful\n" .. tail(res)
+			end, function() end)
+		end)
+	end)
+end, { desc = "Clean, build and run (background)" })
 
 vim.keymap.set("n", "<leader>ct", function()
-	run_in_bottom_terminal("make run")
-end, { desc = "Build and run with Makefile" })
+	run_in_bottom_terminal("make clean && make run")
+end, { desc = "Clean, build and run with Makefile" })
 
 vim.keymap.set("n", "<leader>cd", function()
 	vim.notify("make debug: building...")

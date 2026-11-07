@@ -17,7 +17,7 @@ static inline vec3 vec3_new(double x, double y, double z) {
     return v;
 }
 
-static inline vec3 vec3_random() {
+static inline vec3 vec3_random(void) {
     return vec3_new(random_double(), random_double(), random_double());
 }
 
@@ -62,7 +62,7 @@ static inline vec3 cross(vec3 u, vec3 v) {
 }
 static inline vec3 unit_vector(vec3 v) { return vec3_div(v, vec3_length(v)); }
 
-static inline vec3 vec3_random_unit_vector() {
+static inline vec3 vec3_random_unit_vector(void) {
     while (true) {
         vec3 p = vec3_random_range(-1, 1);
         double lensq = vec3_length_squared(p);
