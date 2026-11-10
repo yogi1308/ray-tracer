@@ -22,6 +22,7 @@ material_scatter(const material *m, ray r_in, const hit_record *rec, color *atte
         }
         case MATERIAL_METAL: {
             vec3 reflected = vec3_reflect(ray_direction(r_in), rec->normal);
+            reflected = vec3_add(unit_vector(reflected), vec3_scale(m->fuzz, vec3_random_unit_vector()));
             *scattered = ray_new(rec->p, reflected);
             *attenuation = m->albedo;
             if (vec3_near_zero(reflected)) {
@@ -29,7 +30,7 @@ material_scatter(const material *m, ray r_in, const hit_record *rec, color *atte
             }
             *scattered = ray_new(rec->p, reflected);
             *attenuation = m->albedo;
-            return true;
+            return dot(ray_direction(*scattered), rec->normal) > 0;
         }
     }
     return false;

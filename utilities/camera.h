@@ -1,6 +1,7 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include <stdbool.h>
 #include "color.h"
 #include "hit_record.h"
 #include "hittable_list.h"
