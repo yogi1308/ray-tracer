@@ -8,6 +8,7 @@
 #include "random.h"
 #include "ray.h"
 #include "rt_weekend.h"
+#include "scatter.h"
 #include "vec3.h"
 typedef struct camera {
     double aspect_ratio;
@@ -80,8 +81,12 @@ static inline color ray_color(ray r, int depth, const hittable_list *world) {
     }
     hit_record rec;
     if (hittable_list_hit(world, r, interval_new(0.001, infinity), &rec)) {
-        vec3 direction = vec3_add(vec3_random_unit_vector(), rec.normal);
-        return vec3_scale(0.5, ray_color(ray_new(rec.p, direction), depth-1, world));
+        ray scattered;
+        color attenuation;
+        if (material_scatter(&rec.mat, r, &rec, &attenuation, &scattered)) {
+            return vec3_mult(attenuation, ray_color(scattered, depth - 1, world));
+        }
+        return color_new(0, 0, 0);
     }
     vec3 unit_direction = unit_vector(ray_direction(r));
     double a = 0.5 * (vec3_y(unit_direction) + 1.0);

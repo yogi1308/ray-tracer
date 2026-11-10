@@ -5,16 +5,18 @@
 
 #include "hit_record.h"
 #include "interval.h"
+#include "material.h"
 #include "ray.h"
 #include "vec3.h"
 
 typedef struct sphere {
     point3 center;
     double radius;
+    material mat;
 } sphere;
 
-static inline sphere sphere_new(point3 center, double radius) {
-    sphere s = {center, fmax(radius, 0.0)};
+static inline sphere sphere_new(point3 center, double radius, material mat) {
+    sphere s = {center, fmax(radius, 0.0), mat};
     return s;
 }
 
@@ -39,6 +41,7 @@ static inline bool sphere_hit(sphere s, ray r, interval interval, hit_record *re
     rec->p = ray_at(r, rec->t);
     vec3 normal = vec3_div(vec3_sub(rec->p, s.center), s.radius);
     set_face_normal(rec, r, normal);
+    rec->mat = s.mat;
 
     return true;
 }

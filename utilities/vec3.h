@@ -1,9 +1,10 @@
 #ifndef VEC3_H
 #define VEC3_H
 
-#include "random.h"
 #include <math.h>
 #include <stdio.h>
+
+#include "random.h"
 
 typedef struct vec3 {
     double e[3];
@@ -17,9 +18,7 @@ static inline vec3 vec3_new(double x, double y, double z) {
     return v;
 }
 
-static inline vec3 vec3_random(void) {
-    return vec3_new(random_double(), random_double(), random_double());
-}
+static inline vec3 vec3_random(void) { return vec3_new(random_double(), random_double(), random_double()); }
 
 static inline vec3 vec3_random_range(double min, double max) {
     return vec3_new(random_double_range(min, max), random_double_range(min, max), random_double_range(min, max));
@@ -79,6 +78,18 @@ static inline vec3 random_on_hemisphere(vec3 normal) {
     } else {
         return vec3_scale(-1, on_unit_sphere);
     }
+}
+
+static inline bool vec3_near_zero(vec3 v) {
+    double s = 1e-8;
+    if (fabs(v.e[0]) < s && fabs(v.e[1]) < s && fabs(v.e[2]) < s) {
+        return true;
+    }
+    return false;
+}
+
+static inline vec3 vec3_reflect(vec3 v, vec3 n) {
+    return vec3_sub(v, vec3_scale(2 * dot(v, n), n));
 }
 
 #endif

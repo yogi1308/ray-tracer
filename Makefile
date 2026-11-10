@@ -1,15 +1,21 @@
-main: main.c utilities/color.c utilities/color.h utilities/ray.h utilities/vec3.h utilities/rt_weekend.h utilities/sphere.h utilities/hittable.h utilities/hit_record.h utilities/hittable_list.h
-	gcc main.c utilities/color.c -o main -lm
+SRC = main.c $(wildcard utilities/*.c)
+HDRS = $(wildcard *.h) $(wildcard utilities/*.h)
+LDLIBS = -lm
+CC = gcc
+OUTPUT_FILE = "outputs/image14.ppm"
 
-debug: main.c utilities/color.c utilities/color.h utilities/ray.h utilities/vec3.h utilities/rt_weekend.h utilities/sphere.h utilities/hittable.h utilities/hit_record.h utilities/hittable_list.h
-	gcc -g -O0 main.c utilities/color.c -o main -lm
+main: $(SRC) $(HDRS)
+	$(CC) $(SRC) -o main $(LDLIBS)
 
-release: main.c utilities/color.c utilities/color.h utilities/ray.h utilities/vec3.h utilities/rt_weekend.h utilities/sphere.h utilities/hittable.h utilities/hit_record.h utilities/hittable_list.h
-	gcc -O3 main.c utilities/color.c -o main -lm
+debug: $(SRC) $(HDRS)
+	$(CC) -g -O0 $(SRC) -o main $(LDLIBS)
+
+release: $(SRC) $(HDRS)
+	$(CC) -O3 $(SRC) -o main $(LDLIBS)
 
 run: main
-	./main > outputs/image13.ppm
-	xdg-open outputs/image13.ppm
+	./main > $(OUTPUT_FILE)
+	xdg-open $(OUTPUT_FILE)
 
 clean:
 	rm -f main

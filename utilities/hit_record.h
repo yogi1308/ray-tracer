@@ -1,11 +1,13 @@
 #ifndef HIT_RECORD_H
 #define HIT_RECORD_H
 
+#include "material.h"
 #include "ray.h"
 #include "vec3.h"
 typedef struct hit_record {
     point3 p;
     vec3 normal;
+    material mat;
     double t;
     bool front_face;
 } hit_record;
