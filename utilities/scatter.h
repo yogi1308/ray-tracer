@@ -7,6 +7,8 @@
 #include "ray.h"
 #include "vec3.h"
 
+// Decides how light leaves a surface. Returns false if the ray is absorbed.
+// scattered: the new ray. attenuation: the fraction of each color channel that survives this bounce.
 static inline bool
 material_scatter(const material *m, ray r_in, const hit_record *rec, color *attenuation, ray *scattered) {
     (void)r_in; // used by metal later
@@ -31,6 +33,14 @@ material_scatter(const material *m, ray r_in, const hit_record *rec, color *atte
             *scattered = ray_new(rec->p, reflected);
             *attenuation = m->albedo;
             return dot(ray_direction(*scattered), rec->normal) > 0;
+        }
+        case MATERIAL_DIELECTRIC: {
+            *attenuation = color_new(1.0, 1.0, 1.0);
+            double ri = rec->front_face ? (1.0 / m->refratcion_index) : m->refratcion_index;
+            vec3 unit_direction = unit_vector(ray_direction(r_in));
+            vec3 refracted = vec3_refract(unit_direction, rec->normal, ri);
+            *scattered = ray_new(rec->p, refracted);
+            return true;
         }
     }
     return false;

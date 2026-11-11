@@ -88,8 +88,18 @@ static inline bool vec3_near_zero(vec3 v) {
     return false;
 }
 
-static inline vec3 vec3_reflect(vec3 v, vec3 n) {
-    return vec3_sub(v, vec3_scale(2 * dot(v, n), n));
-}
+static inline vec3 vec3_reflect(vec3 v, vec3 n) { return vec3_sub(v, vec3_scale(2 * dot(v, n), n)); }
 
+static inline vec3 vec3_refract(const vec3 uv, vec3 n, double etai_over_etat) {
+    double cos_theta = fmin(dot(vec3_scale(-1, uv), n), 1.0);
+    // cos θ = (-uv) · n  (angle between the flipped ray and the normal; capped at 1 against rounding)
+
+    vec3 r_out_perp = vec3_scale(etai_over_etat, vec3_add(uv, vec3_scale(cos_theta, n)));
+    // R'⊥ = (η/η') * (uv + cos θ * n)  (the part of the bent ray sideways to the normal)
+
+    vec3 r_out_parallel = vec3_scale(-sqrt(fabs(1.0 - vec3_length_squared(r_out_perp))),
+        n); // R'∥ = -√(1 - |R'⊥|²) * n  (the part along the normal; the length must come out as 1 overall)
+
+    return vec3_add(r_out_perp, r_out_parallel); // R' = R'⊥ + R'∥  (the two parts added give the bent ray)
+}
 #endif
