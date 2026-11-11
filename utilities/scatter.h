@@ -1,6 +1,8 @@
 #ifndef SCATTER_H
 #define SCATTER_H
 
+#include <math.h>
+
 #include "color.h"
 #include "hit_record.h"
 #include "material.h"
@@ -38,8 +40,16 @@ material_scatter(const material *m, ray r_in, const hit_record *rec, color *atte
             *attenuation = color_new(1.0, 1.0, 1.0);
             double ri = rec->front_face ? (1.0 / m->refratcion_index) : m->refratcion_index;
             vec3 unit_direction = unit_vector(ray_direction(r_in));
-            vec3 refracted = vec3_refract(unit_direction, rec->normal, ri);
-            *scattered = ray_new(rec->p, refracted);
+            double cos_theta = fmin(dot(vec3_negate(unit_direction), rec->normal), 1.0);
+            double sin_theta = sqrt(1.0 - cos_theta * cos_theta);
+            vec3 direction;
+            if (ri * sin_theta > 1.0) { // Snell's law has no solution
+                direction = vec3_reflect(unit_direction, rec->normal);
+            } else {
+                direction = vec3_refract(unit_direction, rec->normal, ri);
+            }
+
+            *scattered = ray_new(rec->p, direction);
             return true;
         }
     }
