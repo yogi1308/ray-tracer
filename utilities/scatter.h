@@ -43,12 +43,11 @@ material_scatter(const material *m, ray r_in, const hit_record *rec, color *atte
             double cos_theta = fmin(dot(vec3_negate(unit_direction), rec->normal), 1.0);
             double sin_theta = sqrt(1.0 - cos_theta * cos_theta);
             vec3 direction;
-            if (ri * sin_theta > 1.0) { // Snell's law has no solution
+            if (ri * sin_theta > 1.0 || reflectance(cos_theta, ri) > random_double()) {
                 direction = vec3_reflect(unit_direction, rec->normal);
             } else {
                 direction = vec3_refract(unit_direction, rec->normal, ri);
             }
-
             *scattered = ray_new(rec->p, direction);
             return true;
         }
