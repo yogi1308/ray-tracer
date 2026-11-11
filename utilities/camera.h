@@ -1,7 +1,9 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include <math.h>
 #include <stdbool.h>
+
 #include "color.h"
 #include "hit_record.h"
 #include "hittable_list.h"
@@ -22,6 +24,11 @@ typedef struct camera {
     int samples_per_pixel;
     double pixel_samples_scale;
     int max_depth;
+    double vfov;
+    point3 lookfrom; // Point camera is looking from
+    point3 lookat;   // Point camera is looking at
+    vec3 vup;        // Camera-relative "up" direction
+    vec3 u, v, w;    // camera axes
 } camera;
 
 static inline camera camera_new(void) {
@@ -31,6 +38,10 @@ static inline camera camera_new(void) {
     cam.samples_per_pixel = 100;
     cam.pixel_samples_scale = 1.0 / cam.samples_per_pixel;
     cam.max_depth = 50;
+    cam.vfov = 90;
+    cam.lookfrom = vec3_new(0, 0, 0);
+    cam.lookat = vec3_new(0, 0, -1);
+    cam.vup = vec3_new(0, 1, 0);
     return cam;
 }
 
@@ -48,17 +59,23 @@ static inline ray camera_get_ray(const camera *cam, int x, int y) {
 static inline void camera_initialize(camera *cam) {
     int image_height = (int)(cam->image_width / cam->aspect_ratio);
     cam->image_height = (image_height < 1) ? 1 : image_height;
+    double focal_length = vec3_length(vec3_sub(cam->lookfrom, cam->lookat));
+    cam->w = unit_vector(vec3_sub(cam->lookfrom, cam->lookat));
+    cam->u = unit_vector(cross(cam->vup, cam->w));
+    cam->v = cross(cam->w, cam->u);
     // Viewport: imaginary 3D rectangle the camera looks through; gives each pixel a 3D point to aim at
-    double viewport_height = 2.0;
+    double theta = degrees_to_radians(cam->vfov);
+    double h = tan(theta / 2);
+
+    double viewport_height = 2.0 * h * focal_length;
     double viewport_width = viewport_height * ((double)cam->image_width / cam->image_height);
 
     // Focal length: distance from camera to viewport; sets how wide/zoomed the view is
-    double focal_length = 1.0;
-    cam->camera_center = vec3_new(0, 0, 0);
+    cam->camera_center = cam->lookfrom;
 
     // viewport_x/veiwport_y: vector across the full viewport, left to right/top to bottom
-    vec3 viewport_x = vec3_new(viewport_width, 0, 0);
-    vec3 viewport_y = vec3_new(0, -viewport_height, 0);
+    vec3 viewport_x = vec3_scale(viewport_width, cam->u);
+    vec3 viewport_y = vec3_scale(-viewport_height, cam->v);
 
     // pixel_delta: 3D step from one pixel to the next
     cam->pixel_delta_x = vec3_div(viewport_x, cam->image_width);
@@ -67,7 +84,7 @@ static inline void camera_initialize(camera *cam) {
     // Start at the camera, move forward to the viewport plane, then half a width left and half a height up, which lands
     // on the top-left corner. upper_left = camera_center − (0, 0, focal_length) − viewport_x/2 − viewport_y/2
     point3 viewport_upper_left =
-        vec3_sub(vec3_sub(vec3_sub(cam->camera_center, vec3_new(0, 0, focal_length)), vec3_div(viewport_x, 2)),
+        vec3_sub(vec3_sub(vec3_sub(cam->camera_center, vec3_scale(focal_length, cam->w)), vec3_div(viewport_x, 2)),
             vec3_div(viewport_y, 2));
 
     // Move from that corner half a pixel right and half a pixel down, so the ray goes through the middle of pixel
