@@ -2,7 +2,7 @@ SRC = main.c $(wildcard utilities/*.c)
 HDRS = $(wildcard *.h) $(wildcard utilities/*.h)
 LDLIBS = -lm
 CC = gcc
-OUTPUT_FILE = "outputs/image21.ppm"
+OUTPUT_FILE = "outputs/image22.ppm"
 
 main: $(SRC) $(HDRS)
 	$(CC) $(SRC) -o main $(LDLIBS)

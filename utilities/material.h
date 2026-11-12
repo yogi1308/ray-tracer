@@ -34,7 +34,7 @@ static inline material material_metal(color albedo, double fuzz) {
     return m;
 }
 
-static inline material meterial_dielectric(double refraction_index) {
+static inline material material_dielectric(double refraction_index) {
     material m;
     m.type = MATERIAL_DIELECTRIC;
     m.albedo = color_new(1, 1, 1);

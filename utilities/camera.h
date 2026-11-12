@@ -25,10 +25,14 @@ typedef struct camera {
     double pixel_samples_scale;
     int max_depth;
     double vfov;
-    point3 lookfrom; // Point camera is looking from
-    point3 lookat;   // Point camera is looking at
-    vec3 vup;        // Camera-relative "up" direction
-    vec3 u, v, w;    // camera axes
+    point3 lookfrom;      // Point camera is looking from
+    point3 lookat;        // Point camera is looking at
+    vec3 vup;             // Camera-relative "up" direction
+    vec3 u, v, w;         // camera axes
+    double defocus_angle; // angle of the cone of rays through each pixel; 0 = no blur
+    double focus_dist;    // distance from lookfrom to the perfectly sharp plane
+    vec3 defocus_disk_u;  // horizontal radius of the disc
+    vec3 defocus_disk_v;  // vertical radius of the disc
 } camera;
 
 static inline camera camera_new(void) {
@@ -42,7 +46,14 @@ static inline camera camera_new(void) {
     cam.lookfrom = vec3_new(0, 0, 0);
     cam.lookat = vec3_new(0, 0, -1);
     cam.vup = vec3_new(0, 1, 0);
+    cam.focus_dist = 10;
     return cam;
+}
+
+static inline point3 defocus_disk_sample(const camera *cam) {
+    vec3 p = vec3_random_in_unit_disk();
+    return vec3_add(cam->camera_center,
+        vec3_add(vec3_scale(vec3_x(p), cam->defocus_disk_u), vec3_scale(vec3_y(p), cam->defocus_disk_v)));
 }
 
 static inline vec3 sample_square(void) { return vec3_new(random_double() - 0.5, random_double() - 0.5, 0); }
@@ -52,22 +63,26 @@ static inline ray camera_get_ray(const camera *cam, int x, int y) {
     point3 pixel_sample = vec3_add(cam->pixel_00_loc,
         vec3_add(vec3_scale(x + vec3_x(offset), cam->pixel_delta_x),
             vec3_scale(y + vec3_y(offset), cam->pixel_delta_y)));
-    point3 origin = cam->camera_center;
+    point3 origin = (cam->defocus_angle <= 0) ? cam->camera_center : defocus_disk_sample(cam);
     return ray_new(origin, vec3_sub(pixel_sample, origin));
 }
 
 static inline void camera_initialize(camera *cam) {
     int image_height = (int)(cam->image_width / cam->aspect_ratio);
     cam->image_height = (image_height < 1) ? 1 : image_height;
-    double focal_length = vec3_length(vec3_sub(cam->lookfrom, cam->lookat));
     cam->w = unit_vector(vec3_sub(cam->lookfrom, cam->lookat));
     cam->u = unit_vector(cross(cam->vup, cam->w));
     cam->v = cross(cam->w, cam->u);
+
+
+    double defocus_radius = cam->focus_dist * tan(degrees_to_radians(cam->defocus_angle / 2));
+    cam->defocus_disk_u = vec3_scale(defocus_radius, cam->u);
+    cam->defocus_disk_v = vec3_scale(defocus_radius, cam->v);
     // Viewport: imaginary 3D rectangle the camera looks through; gives each pixel a 3D point to aim at
     double theta = degrees_to_radians(cam->vfov);
     double h = tan(theta / 2);
 
-    double viewport_height = 2.0 * h * focal_length;
+    double viewport_height = 2.0 * h * cam->focus_dist;
     double viewport_width = viewport_height * ((double)cam->image_width / cam->image_height);
 
     // Focal length: distance from camera to viewport; sets how wide/zoomed the view is
@@ -84,7 +99,7 @@ static inline void camera_initialize(camera *cam) {
     // Start at the camera, move forward to the viewport plane, then half a width left and half a height up, which lands
     // on the top-left corner. upper_left = camera_center − (0, 0, focal_length) − viewport_x/2 − viewport_y/2
     point3 viewport_upper_left =
-        vec3_sub(vec3_sub(vec3_sub(cam->camera_center, vec3_scale(focal_length, cam->w)), vec3_div(viewport_x, 2)),
+        vec3_sub(vec3_sub(vec3_sub(cam->camera_center, vec3_scale(cam->focus_dist, cam->w)), vec3_div(viewport_x, 2)),
             vec3_div(viewport_y, 2));
 
     // Move from that corner half a pixel right and half a pixel down, so the ray goes through the middle of pixel
